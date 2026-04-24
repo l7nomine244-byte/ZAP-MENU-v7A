@@ -6,7 +6,7 @@ local Rayfield = loadstring(game:HttpGet('https://raw.githubusercontent.com/UI-I
 local Window = Rayfield:CreateWindow({
    Name = "ZAP MENU v1.0",
    LoadingTitle = "ZAP MENU",
-   LoadingSubtitle = "ESP + Aimbot + Farm",
+   LoadingSubtitle = "SINTONIA RP",
    ConfigurationSaving = {
       Enabled = false,
    },
