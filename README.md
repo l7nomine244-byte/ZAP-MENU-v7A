@@ -652,7 +652,7 @@ local infoTab = Window:CreateTab("INFO", 4483362463)
 infoTab:CreateSection("Sobre", false)
 
 infoTab:CreateLabel("ZAP MENU v1.0")
-infoTab:CreateLabel("ESP + Aimbot + Silent Aim")
+infoTab:CreateLabel("SINTONIA RP")
 infoTab:CreateLabel("Farm + Anti-AFK")
 infoTab:CreateLabel("")
 infoTab:CreateLabel("CONTROLES:")
