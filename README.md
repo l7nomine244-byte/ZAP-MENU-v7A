@@ -1,5 +1,5 @@
 -- // ZAP MENU v1.0 - Arrayfield/Rayfield Version
--- // ESP + Aimbot + Silent Aim + Farm + AFK
+-- // ESP + Aimbot + Silent Aim + Farm + AFK + ESP RGB
 
 local Rayfield = loadstring(game:HttpGet('https://raw.githubusercontent.com/UI-Interface/CustomFIeld/main/RayField.lua'))()
 
@@ -31,6 +31,8 @@ local ESP_Linhas = true
 local ESP_DistanciaMaxima = 500
 local ESP_Cor = Color3.fromRGB(255, 50, 50)
 local ESP_TamanhoTexto = 14
+local ESP_RGB = false
+local ESP_RGB_Velocidade = 1
 
 local Aimbot_Ativo = false
 local Aimbot_MiraParte = "Head"
@@ -60,6 +62,50 @@ local ESPObjects = {}
 local FOVCircle = nil
 local farmActive = false
 local farmLoopRunning = false
+
+-- =====================
+-- // ESP RGB
+-- =====================
+
+local function atualizarCorRGB()
+    if not ESP_RGB then return end
+    
+    local hue = (tick() * ESP_RGB_Velocidade) % 1
+    local novaCor = Color3.fromHSV(hue, 1, 1)
+    ESP_Cor = novaCor
+    
+    -- Atualizar cores dos ESP objects
+    for _, objs in pairs(ESPObjects) do
+        if objs.Nick then
+            objs.Nick.Color = novaCor
+        end
+        if objs.BoxTop then
+            objs.BoxTop.Color = novaCor
+        end
+        if objs.BoxBot then
+            objs.BoxBot.Color = novaCor
+        end
+        if objs.BoxLeft then
+            objs.BoxLeft.Color = novaCor
+        end
+        if objs.BoxRight then
+            objs.BoxRight.Color = novaCor
+        end
+        if objs.Linha then
+            objs.Linha.Color = novaCor
+        end
+    end
+end
+
+-- Loop RGB
+task.spawn(function()
+    while true do
+        if ESP_RGB and ESP_Ativo then
+            atualizarCorRGB()
+        end
+        task.wait(0.05)
+    end
+end)
 
 -- =====================
 -- // ANTI-AFK SIMPLES E SEGURO
@@ -168,7 +214,7 @@ local function atualizarESP()
             if objs.Nick.Visible then
                 objs.Nick.Text = player.Name .. " [" .. math.floor(distancia) .. "m]"
                 objs.Nick.Position = Vector2.new(posTela.X, posBaseTela.Y - 16)
-                objs.Nick.Color = ESP_Cor
+                objs.Nick.Color = ESP_RGB and ESP_Cor or ESP_Cor
                 objs.Nick.Size = ESP_TamanhoTexto
             end
             
@@ -189,7 +235,8 @@ local function atualizarESP()
                 ln.Visible = mostrarCaixa
                 if mostrarCaixa then
                     ln.From = from ; ln.To = to
-                    ln.Color = ESP_Cor ; ln.Thickness = 1
+                    ln.Color = ESP_RGB and ESP_Cor or ESP_Cor
+                    ln.Thickness = 1
                 end
             end
             
@@ -197,7 +244,7 @@ local function atualizarESP()
             if objs.Linha.Visible then
                 objs.Linha.From = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y)
                 objs.Linha.To = posTela
-                objs.Linha.Color = ESP_Cor
+                objs.Linha.Color = ESP_RGB and ESP_Cor or ESP_Cor
                 objs.Linha.Thickness = 1
             end
         end
@@ -456,10 +503,37 @@ espTab:CreateSlider({
 
 espTab:CreateSection("Cores", false)
 
+espTab:CreateToggle({
+    Name = "MODO RGB",
+    CurrentValue = false,
+    Callback = function(v)
+        ESP_RGB = v
+        if not v then
+            -- Voltar para cor padrao quando desligar RGB
+            ESP_Cor = Color3.fromRGB(255, 50, 50)
+        end
+    end
+})
+
+espTab:CreateSlider({
+    Name = "Velocidade RGB",
+    Range = {0.5, 5},
+    Increment = 0.5,
+    Suffix = "x",
+    CurrentValue = 1,
+    Callback = function(v)
+        ESP_RGB_Velocidade = v
+    end
+})
+
 espTab:CreateColorPicker({
-    Name = "Cor do ESP",
+    Name = "Cor do ESP (quando RGB desligado)",
     Color = Color3.fromRGB(255, 50, 50),
-    Callback = function(v) ESP_Cor = v end
+    Callback = function(v)
+        if not ESP_RGB then
+            ESP_Cor = v
+        end
+    end
 })
 
 local aimbotTab = Window:CreateTab("AIMBOT", 4483362459)
@@ -678,6 +752,10 @@ infoTab:CreateLabel("")
 infoTab:CreateLabel("ANTI-AFK:")
 infoTab:CreateLabel("Funciona minimizado")
 infoTab:CreateLabel("Intervalo ajustavel")
+infoTab:CreateLabel("")
+infoTab:CreateLabel("ESP RGB:")
+infoTab:CreateLabel("Ative na aba ESP")
+infoTab:CreateLabel("Cores mudam automaticamente")
 
 -- =====================
 -- // LOOPS
@@ -695,6 +773,6 @@ Players.PlayerRemoving:Connect(removerESP)
 
 print("ZAP MENU v1.0 carregado!")
 print("Aimbot: segure botao direito do mouse")
-print("ESP: ative na aba ESP")
+print("ESP: ative na aba ESP - Modo RGB disponivel!")
 print("Farm: ative na aba FARM")
 print("Anti-AFK: ative na aba AFK - funciona minimizado")
