@@ -34,6 +34,7 @@ local ESP_TamanhoTexto = 14
 
 local Aimbot_Ativo = false
 local Aimbot_MiraParte = "Head"
+local Aimbot_Smoothing = 5
 local Aimbot_FOV = 200
 local Aimbot_KeyBind = "RightButton"
 local Aimbot_MostrarFOV = true
@@ -64,7 +65,6 @@ local farmLoopRunning = false
 -- // ANTI-AFK SIMPLES E SEGURO
 -- =====================
 
--- Apenas move o mouse levemente (mais seguro e funciona em segundo plano)
 local function moverMouseLevemente()
     pcall(function()
         mousemoverel(1, 0)
@@ -73,22 +73,18 @@ local function moverMouseLevemente()
     end)
 end
 
--- Apenas um passo curto do personagem
 local function darPequenoPulo()
     local char = LocalPlayer.Character
     local humanoid = char and char:FindFirstChild("Humanoid")
     
     if humanoid then
-        -- Pequeno pulo (se o jogo permitir)
         pcall(function()
             humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
         end)
     end
 end
 
--- Funcao principal do Anti-AFK (apenas uma acao por vez)
 local function executarAcaoAntiAFK()
-    -- Alterna entre mover mouse e dar pulo
     if math.random(1, 2) == 1 then
         moverMouseLevemente()
     else
@@ -209,7 +205,7 @@ local function atualizarESP()
 end
 
 -- =====================
--- // FUNCOES AIMBOT
+-- // FUNCOES AIMBOT (COM SMOOTHING)
 -- =====================
 
 local function criarFOVCircle()
@@ -265,6 +261,17 @@ local function getClosestPlayer()
     return closest
 end
 
+local function miraSuave(alvo, smoothing)
+    local direction = (alvo.Position - Camera.CFrame.Position).Unit
+    local targetCF = CFrame.new(Camera.CFrame.Position, Camera.CFrame.Position + direction)
+    Camera.CFrame = Camera.CFrame:Lerp(targetCF, 1 / smoothing)
+end
+
+local function miraInsta(alvo)
+    local direction = (alvo.Position - Camera.CFrame.Position).Unit
+    Camera.CFrame = CFrame.new(Camera.CFrame.Position, Camera.CFrame.Position + direction)
+end
+
 task.spawn(function()
     while true do
         if Aimbot_Ativo then
@@ -280,10 +287,11 @@ task.spawn(function()
             if isPressed then
                 local target = getClosestPlayer()
                 if target then
-                    local targetPos = target.Position
-                    local currentPos = Camera.CFrame.Position
-                    local direction = (targetPos - currentPos).Unit
-                    Camera.CFrame = CFrame.new(currentPos, currentPos + direction)
+                    if Aimbot_Smoothing > 1 then
+                        miraSuave(target, Aimbot_Smoothing)
+                    else
+                        miraInsta(target)
+                    end
                 end
             end
         end
@@ -479,6 +487,14 @@ aimbotTab:CreateDropdown({
 })
 
 aimbotTab:CreateSlider({
+    Name = "Smoothing (Suavidade)",
+    Range = {1, 20},
+    Increment = 1,
+    CurrentValue = 5,
+    Callback = function(v) Aimbot_Smoothing = v end
+})
+
+aimbotTab:CreateSlider({
     Name = "FOV",
     Range = {50, 500},
     Increment = 10,
@@ -652,7 +668,7 @@ local infoTab = Window:CreateTab("INFO", 4483362463)
 infoTab:CreateSection("Sobre", false)
 
 infoTab:CreateLabel("ZAP MENU v1.0")
-infoTab:CreateLabel("SINTONIA RP")
+infoTab:CreateLabel("ESP + Aimbot + Silent Aim")
 infoTab:CreateLabel("Farm + Anti-AFK")
 infoTab:CreateLabel("")
 infoTab:CreateLabel("CONTROLES:")
